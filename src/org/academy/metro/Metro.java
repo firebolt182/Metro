@@ -144,7 +144,7 @@ public class Metro {
     }
 
     /* 2.2 Подсчет перегонов по следующим станциям */
-    public int countStagesUp(Station start, Station finish) {
+    private int countStagesUp(Station start, Station finish) {
         int count = 1;
         if (start.getAfter() == null) {
             return -1;
@@ -167,7 +167,7 @@ public class Metro {
     }
 
     /* 2.3 Подсчет перегонов по предыдущим станциям */
-    public int countStagesDown(Station start, Station finish) {
+    private int countStagesDown(Station start, Station finish) {
         int count = 1;
         if (start.getBefore() == null) {
             return -1;
@@ -190,7 +190,7 @@ public class Metro {
     }
 
     /* 2.4 Подсчет перегонов вверх или вниз на одной линии */
-    public int countStages(Station start, Station finish) throws NoWayException {
+    private int countStages(Station start, Station finish) throws NoWayException {
         int countUp = countStagesUp(start, finish);
         if (countUp != -1) {
             return countUp;
@@ -234,7 +234,7 @@ public class Metro {
     }
 
     /* Проверяем существование станции */
-    public boolean stationExists(Station station) throws StationExistsException {
+    private boolean stationExists(Station station) throws StationExistsException {
         for (Line line : lines) {
             for (Station station1 : line.getStations()) {
                 if (station1.getName().equals(station.getName())) {
@@ -246,7 +246,7 @@ public class Metro {
     }
 
     /* Проверка начальная станция не равна конечной */
-    public void checkSameStations(Station first, Station second) throws CheckSameStationException {
+    private void checkSameStations(Station first, Station second) throws CheckSameStationException {
         if (first.getName().equals(second.getName())) {
             throw new CheckSameStationException("Станция начала совпадает со станцией конца");
         }
@@ -295,7 +295,7 @@ public class Metro {
         profit.stream().forEach(System.out::println);
     }
 
-    public List<String> getIncomeFromAllStations() {
+    private List<String> getIncomeFromAllStations() {
         List<String> incomeFromAllStations = new ArrayList<>();
         for (Line line : this.getLines()) {
             for (Station station : line.getStations()) {
