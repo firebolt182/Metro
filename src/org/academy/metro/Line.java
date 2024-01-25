@@ -1,11 +1,11 @@
 package org.academy.metro;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 public class Line {
     private String color;
-    private List<Station> stations = new ArrayList<>();
+    private Set<Station> stations = new LinkedHashSet<>();
     private Metro metro;
 
     public Line(String color, Metro metro) {
@@ -13,19 +13,27 @@ public class Line {
         this.metro = metro;
     }
 
+    public Station createFirstStation(String name) {
+        return new Station(name, this, this.metro);
+    }
+
+    public Station createLastStation(String name, Station before, Line line, Metro metro) {
+        return new Station(name, before, line, metro);
+    }
+
     public String getColor() {
         return color;
     }
 
-    public List<Station> getStations() {
+    public Set<Station> getStations() {
         return stations;
     }
 
     @Override
     public String toString() {
-        return "Line{" +
-                "color='" + color + '\'' +
-                ", stations=" + stations +
-                '}';
+        return "Line{"
+                + "color='" + color + '\''
+                + ", stations=" + stations
+                + '}';
     }
 }
