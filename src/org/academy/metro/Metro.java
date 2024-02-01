@@ -25,10 +25,10 @@ public class Metro {
     }
 
     public Line createLine(String color) throws LineAlreadyExistsException {
-        for (Line line : lines) {
-            if (line.getColor().equals(color)) {
-                throw new LineAlreadyExistsException("Линия с таким цветом уже существует");
-            }
+        List<Line> stream = lines.stream().filter(line ->
+            line.getColor().equals(color)).toList();
+        if (!stream.isEmpty()) {
+            throw new LineAlreadyExistsException("Линия с таким цветом уже существует");
         }
         return new Line(color, this);
     }
@@ -47,29 +47,29 @@ public class Metro {
 
     /* Проверяем, что такой станции не существует во всех линиях */
     private void checkStationName(String name) throws StationNameException {
-        for (Station station : allStationsList(lines)) {
-            if (station.getName().equals(name)) {
-                throw new StationNameException("Станция с таким именем уже существует!");
-            }
+        List<Station> allStations = allStationsList(lines);
+        List<Station> stream = allStations.stream().filter(station ->
+                station.getName().equals(name)).toList();
+        if (!stream.isEmpty()) {
+            throw new StationNameException("Линия с таким цветом уже существует");
         }
     }
 
     private List<Station> allStationsList(Set<Line> lines) {
         List<Station> stations = new ArrayList<>();
-        for (Line line : lines) {
-            stations.addAll(line.getStations());
-        }
+        lines.forEach(line -> stations.addAll(line.getStations()));
         return stations;
     }
 
     /* Проверяем,что линия с указанным цветом существует */
     private Line lineColorExists(String color) throws StationCreateException {
-        for (Line line : lines) {
-            if (line.getColor().equalsIgnoreCase(color)) {
-                return line;
-            }
-        }
-        throw new StationCreateException("Линия с цветом: " + color + " не существует");
+        Line result = lines.stream()
+                .filter(line -> line.getColor().equalsIgnoreCase(color))
+                .findFirst()
+                .orElseThrow(() ->
+                        new StationCreateException("Линия с цветом: " + color + " не существует"));
+
+        return result;
     }
 
     /* Проверяем-пустая линия или нет */
@@ -79,9 +79,10 @@ public class Metro {
 
     public Station createLastStation(String lineColor, String stationName,
                                      Duration duration) throws LastStationException,
-            StationNameException, LineNameException, DurationException, PreviousStationException {
+            StationNameException, LineNameException, DurationException,
+            PreviousStationException, StationCreateException {
         checkStationName(stationName);
-        Line line = lineNameExists(lineColor);
+        Line line = lineColorExists(lineColor);
         checkDurationTime(duration);
         Station previousStation = checkPreviousStation(line);
         previousStation.setDurationToNext(duration);
@@ -89,15 +90,6 @@ public class Metro {
         previousStation.setAfter(station);
         line.getStations().add(station);
         return station;
-    }
-
-    private Line lineNameExists(String lineColor) throws LineNameException {
-        for (Line line : lines) {
-            if (line.getColor().equalsIgnoreCase(lineColor)) {
-                return line;
-            }
-        }
-        throw new LineNameException("Линия с таким цветом не существует");
     }
 
     /*
@@ -117,11 +109,10 @@ public class Metro {
 
     //Забираем последнюю станцию из сета, которая после добавления новой - станет предыдущей
     private Station lastStation(Line line) {
-        Station result = null;
-        for (Station station : line.getStations()) {
-            result = station;
-        }
-        return result;
+        Station last = line.getStations().stream()
+                .reduce((first, second) -> second)
+                .orElseThrow();
+        return last;
     }
 
     private void checkDurationTime(Duration duration) throws DurationException {
@@ -132,31 +123,28 @@ public class Metro {
 
     /* 2.1 Определение станции на пересадку */
     public Station transferStation(Line from, Line to) throws StationNotFoundException {
-        for (Station station : changeStationsList(to)) {
-            if (station.getLine().getColor().equals(from.getColor())) {
-                return station;
-            }
-        }
-        throw new StationNotFoundException("Станция на пересадку не найдена");
+        Station result = changeStationsList(to).stream()
+                .filter(station -> station.getLine().getColor().equalsIgnoreCase(from.getColor()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new StationNotFoundException("Станция на пересадку не найдена"));
+
+        return result;
     }
 
     /* Вытаскиваем из линии станции с пересадками */
     private List<Station> stationsWithTransfer(Line line) {
-        List<Station> stationsWithTransfer = new ArrayList<>();
-        for (Station station : line.getStations()) {
-            if (station.getChangeLines() != null) {
-                stationsWithTransfer.add(station);
-            }
-        }
+        List<Station> stationsWithTransfer = line.getStations().stream()
+                .filter(station -> station.getChangeLines() != null)
+                .toList();
         return stationsWithTransfer;
     }
 
     /* Получаем список станций на пересадку */
     private List<Station> changeStationsList(Line to) {
         List<Station> changeStations =  new ArrayList<>();
-        for (Station station : stationsWithTransfer(to)) {
-            changeStations.addAll(station.getChangeLines());
-        }
+        stationsWithTransfer(to)
+                .forEach(station -> changeStations.addAll(station.getChangeLines()));
         return changeStations;
     }
 
@@ -224,11 +212,12 @@ public class Metro {
         } else {
             Station transferStation = transferStation(start.getLine(), finish.getLine());
             int beforeTransfer = countStages(start, transferStation);
-            for (Station station : transferStation.getChangeLines()) {
-                if (station.getLine().getColor().equals(finish.getLine().getColor())) {
-                    transferStation = station;
-                }
-            }
+            Station transfer = transferStation.getChangeLines().stream()
+                    .filter(station -> station.getLine().getColor()
+                            .equals(finish.getLine().getColor()))
+                    .findFirst()
+                    .orElseThrow();
+            transferStation = transfer;
             int afterTransfer = countStages(transferStation, finish);
             return beforeTransfer + afterTransfer;
         }
@@ -236,14 +225,14 @@ public class Metro {
 
     /* Проверяем существование станции */
     private boolean stationExists(Station station) throws StationExistsException {
-        for (Line line : lines) {
-            for (Station station1 : line.getStations()) {
-                if (station1.getName().equals(station.getName())) {
-                    return true;
-                }
-            }
-        }
-        throw new StationExistsException("Станции " + station.getName() + "не существует");
+        List<Station> allStations = allStationsList(lines);
+
+        Station result = allStations.stream()
+                .filter(station1 -> station1.getName().equalsIgnoreCase(station.getName()))
+                .findFirst()
+                .orElseThrow(() ->
+                        new StationExistsException("Станции " + station.getName() + "не существует"));
+        return true;
     }
 
     /* Проверка начальная станция не равна конечной */
@@ -263,40 +252,37 @@ public class Metro {
     /* 3.2 Проверка действительности абонемента */
     public boolean isTravelCardActive(String travelCardNumber, LocalDate checkDate)
             throws CheckTravelCardException {
-        for (Map.Entry<String, LocalDate> entry : this.getTravelCardContainer().entrySet()) {
-            if (entry.getKey().equals(travelCardNumber)) {
-                return entry.getValue().isAfter(checkDate);
-            }
-        }
-        throw new CheckTravelCardException("Неверный номер абонемента");
+        LocalDate date = this.getTravelCardContainer().entrySet().stream()
+                .filter(card -> card.getKey().equals(travelCardNumber))
+                .map(Map.Entry::getValue)
+                .findFirst()
+                .orElseThrow(() -> new CheckTravelCardException("Неверный номер абонемента"));
+        return date.isAfter(checkDate);
     }
 
     /* 3.4 Добавляем функцию печати доходов касс всех станций по дням, в которые были продажи */
     public void printProfitFromStations() {
         Map<LocalDate, Long> totalResult = calculateIncome();
-        for (Map.Entry<LocalDate, Long> income : totalResult.entrySet()) {
-            System.out.println(income.getKey() + " - " + income.getValue());
-        }
+        totalResult.forEach((key, value) -> System.out.println(key + " - " + value));
     }
 
-    /*
-     * Юр, 2 прохода, вложенность пока эту пока мне не победить
-     * по моей логике я итерируюсь по всем станциям и у каждой станции прохожу по прибыли
-     */
+
     private Map<LocalDate, Long> calculateIncome() {
         Map<LocalDate, Long> totalResult = new TreeMap<>();
         List<Station> stations = allStationsList(lines);
-        for (Station station : stations) {
-            for (Map.Entry<LocalDate, Long> income : station.getCashier().getIncome().entrySet()) {
-                if (totalResult.containsKey(income.getKey())) {
-                    totalResult.put(income.getKey(),
-                            totalResult.get(income.getKey()) + income.getValue());
-                } else {
-                    totalResult.put(income.getKey(), income.getValue());
-                }
-            }
-        }
+        stations.forEach(station -> calculate(station, totalResult));
         return totalResult;
+    }
+
+    private void calculate(Station station, Map<LocalDate, Long> result) {
+        station.getCashier().getIncome().forEach((key, value) -> {
+            if (result.containsKey(key)) {
+                result.put(key,
+                        result.get(key) + value);
+            } else {
+                result.put(key, value);
+            }
+        });
     }
 
     @Override

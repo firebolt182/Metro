@@ -93,14 +93,12 @@ public class Station {
         cashier.sellTicket(date, start, finish);
     }
 
-    private String printChangeLines() {
+    private String showChangeLines() {
         if (changeLines == null) {
             return null;
         }
         StringBuilder transfer = new StringBuilder();
-        for (Station station : changeLines) {
-            transfer.append(station.getLine().getColor()).append(", ");
-        }
+        changeLines.forEach(station -> transfer.append(station.getLine().getColor()).append(", "));
         return transfer.substring(0, transfer.length() - 2);
     }
 
@@ -108,7 +106,7 @@ public class Station {
     public String toString() {
         return "Station{"
                 + "name='" + name + '\''
-                + ", changeLines=" + printChangeLines()
+                + ", changeLines=" + showChangeLines()
                 + '}';
     }
 }

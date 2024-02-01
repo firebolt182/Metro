@@ -52,7 +52,6 @@ public class Runner {
                     "Соборная", Duration.ofSeconds(60 + 48));
 
             //Продажа билетов
-            System.out.println("ZZZZZZZZZZZZZZZ");
             sobornayaStation.sellTicket(LocalDate.of(2022, Month.JANUARY, 21),
                     sobornayaStation, pacanskayaStation);
             sobornayaStation.sellTicket(LocalDate.of(2022, Month.JANUARY, 21),
@@ -69,27 +68,13 @@ public class Runner {
             //Продление проездного
             perm1Station.getCashier().travelCardProlongation(permSubway, "a0001",
                     LocalDate.of(2022, 12, 20));
-            for (Map.Entry<String, LocalDate> dates : permSubway.getTravelCardContainer().entrySet()) {
-                System.out.println("print dates");
-                System.out.println(dates.getValue());
-            }
 
             //Вывод прибыли на конкретной станции
             System.out.println(Arrays.asList(sobornayaStation.getCashier().getIncome()));
             System.out.println(Arrays.asList(sportivnayaStation.getCashier().getIncome()));
             //Вывод прибыли на всех станциях
-            System.out.println("-_-_-_-_-_-_-");
-            System.out.println("PRINT ALL PROFIT");
+            System.out.println("print all profit:");
             permSubway.printProfitFromStations();
-            System.out.println("-_-_-_-_-_-_-");
-            System.out.println("ZZZZZZZZZZZZZZZ");
-            System.out.println("=================");
-            for (Station station : blue.getStations()) {
-                System.out.print(station.getName() + " --- ");
-            }
-            System.out.println();
-            System.out.println("=================");
-
             try {
                 //Вывод станций на пересадку
                 Station redTransfer = permSubway.transferStation(red, blue);
@@ -101,12 +86,10 @@ public class Runner {
             } catch (StationNotFoundException e) {
                 System.out.println(e.getMessage());
             }
-            System.out.println("--------");
 
             //Проверка количества перегонов между станциями
             System.out.println("Check stages between stations");
-            System.out.println(permSubway.countStations(perm2Station, perm1Station));
-            System.out.println("--------");
+            System.out.println(permSubway.countStations(perm2Station, pacanskayaStation));
 
             //Вывод номеров реализованных абонементов
             Set<String> cardNumbers = permSubway.getTravelCardContainer().keySet();
